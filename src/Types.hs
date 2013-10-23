@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 module Types(
   BefungeState(..),
   BefungeOperation(..),
@@ -13,10 +15,15 @@ module Types(
   Mode(..),
   moveTo, moveTo',
   getFocus, getFocus',
-  setFocus, setFocus'
+  setFocus, setFocus',
+  Operation(..),
+  OperationF(..),
+  Program,
+  Free(..)
 )where
 
 import Data.Monoid
+import Control.Monad.Free
 
 data Direction = L | R | U | D deriving (Show, Eq)
 
@@ -37,26 +44,33 @@ data BefungeState = BefungeState
 data Mode = StringMode | Normal deriving Show
 
 --Corresponds to the above definitions
-data BefungeOperation = 
+data Operation a =
   Number Int
   | Add | Subt | Mult | Div | Mod | Not | GT
   | Dir Direction | RandDir
   | PopRight | PopLeft
-  | Str String
+  | Str
   | Duplicate | Swap
   | PopDiscard | PopOutputInt | PopOutputAscii
   | Skip
   | Put | Get
-  | AskNum | AskChar
-  | End 
+  | AskNum a | AskChar a
   | Empty
-  | BefungeOps [BefungeOperation] -- purely for Monoid instance
+  | BefungeOps [Operation a] -- purely for Monoid instance
   deriving (Show, Eq)
-  
-instance Monoid BefungeOperation where
+
+type BefungeOperation = Operation Char
+
+--operation functor for use with the free monad below
+data OperationF a next = OperationF (Operation a) next | End deriving Functor
+
+--program spec
+type Program = Free (OperationF Char)
+
+instance Monoid (Operation a) where
   mempty = Empty
   mappend a b = BefungeOps [a, b]
-
+  
 moveTo :: Torus a -> Point -> Torus a
 moveTo t@(Torus zipper w h) p@(x, y) = 
   if (length tops == y) && (length lefts == x) then t

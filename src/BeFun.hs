@@ -30,6 +30,7 @@
    (space)	No-op. Does nothing
 -}
 
+
 -- TESTING HOME COMPUTER / SOURCETREE
 
 import Types
@@ -37,6 +38,7 @@ import Data.Monoid
 import Control.Monad.State
 import Data.Char(chr, ord, isDigit, digitToInt)
 import System.Exit(exitWith, ExitCode(..))
+import Control.Monad.Free
 
 {- data BefungeState = BefungeState
   {instructions :: Torus BefungeOperation, 
