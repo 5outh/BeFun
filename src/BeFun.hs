@@ -43,13 +43,13 @@ import Data.Char(chr)
    arrayLoc :: Point, 
    dir :: Direction} deriving Show -}
    
-num a (BefungeState is xs loc dir)= Right $ BefungeState is (a:xs) loc dir
+num a (BefungeState is xs loc dir m)= Right $ BefungeState is (a:xs) loc dir m
 
-bsPopFunBinary f (BefungeState is (x:y:xs) loc dir) = Right $ BefungeState is ((f x y):xs) loc dir
-bsPopFunBinary f (BefungeState is xs loc dir) | length xs < 2 = Left "Error: Attempt to perform binary operation without enough numbers in stack"
+bsPopFunBinary f (BefungeState is (x:y:xs) loc dir m) = Right $ BefungeState is ((f x y):xs) loc dir m
+bsPopFunBinary f (BefungeState is xs loc dir m) | length xs < 2 = Left "Error: Attempt to perform binary operation without enough numbers in stack"
 
-bsPopFunUnary f (BefungeState is (x:xs) loc dir) = Right $ BefungeState is (f x : xs) loc dir
-bsPopFunUnary f (BefungeState _ []      _   _) = Left "Error: Attempt to perform unary operation with empty stack" 
+bsPopFunUnary f (BefungeState is (x:xs) loc dir m) = Right $ BefungeState is (f x : xs) loc dir m
+bsPopFunUnary f (BefungeState _ []      _   _   _) = Left "Error: Attempt to perform unary operation with empty stack" 
 
 add     = bsPopFunBinary (+)
 subt    = bsPopFunBinary (-)
@@ -60,29 +60,31 @@ gt      = bsPopFunBinary (\a b -> if b > a then 1 else 0)
  
 not'    = bsPopFunUnary (\x -> if x == 0 then 1 else 0)
 
-setDirection d (BefungeState is xs loc _) = Right $ BefungeState is xs loc d
+setDirection d (BefungeState is xs loc _ m) = Right $ BefungeState is xs loc d m
 
-popRL bs@(BefungeState is (x:xs) loc dir) = case x of
-        0 -> Right $ BefungeState is xs loc R
-        _ -> Right $ BefungeState is xs loc L
-popRL (BefungeState _ []      _   _  ) = Left "Error: Empty Stack; cannot perform '_'"
+popRL bs@(BefungeState is (x:xs) loc dir m) = case x of
+        0 -> Right $ BefungeState is xs loc R m
+        _ -> Right $ BefungeState is xs loc L m
+popRL (BefungeState    _  []      _  _   _) = Left "Error: Empty Stack; cannot perform '_'"
  
-popUD bs@(BefungeState is (x:xs) loc dir) = case x of
-  0 -> Right $ BefungeState is xs loc D
-  _ -> Right $ BefungeState is xs loc U
-popUD (BefungeState _ []      _   _  ) = Left $ "Error: Empty Stack; cannot perform '|'"
+popUD bs@(BefungeState is (x:xs) loc dir m) = case x of
+  0 -> Right $ BefungeState is xs loc D m
+  _ -> Right $ BefungeState is xs loc U m
+popUD (BefungeState    _  []     _   _   _) = Left $ "Error: Empty Stack; cannot perform '|'"
 
-pop (BefungeState is (x:xs) loc dir) = Right $ BefungeState is xs loc dir
-pop (BefungeState _ []      _   _  ) = Left $ "Error: Empty Stack; cannot pop"
+pop (BefungeState is (x:xs) loc dir m) = Right $ BefungeState is xs loc dir
+pop (BefungeState _ []      _   _  _ ) = Left $ "Error: Empty Stack; cannot pop"
 
-popInt   (BefungeState is (x:xs) loc dir) = do
+popInt   (BefungeState is (x:xs) loc dir m) = do
   putStr (show x)
-  return $ Right (BefungeState is xs loc dir)
+  return $ Right (BefungeState is xs loc dir m)
 
-popAscii (BefungeState is (x:xs) loc dir) = do
+popAscii (BefungeState is (x:xs) loc dir m) = do
   putChar (chr x)
-  return $ Right (BefungeState is xs loc dir)
+  return $ Right (BefungeState is xs loc dir m)
 
---Note sure how to implement this 100% yet
-strMode = undefined
-
+--Toggle between strMode and NormalMode
+strMode (BefungeState is xs loc dir m) = BefungeState is xs loc dir $
+  case m of
+    StringMode -> Normal
+    Normal     -> StringMode

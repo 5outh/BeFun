@@ -9,7 +9,8 @@ module Types(
   mv2D, mv,
   mkZipper, mkEmptyZipper,
   mkZipperBounded, mkZipper2DBounded,
-  mvPointTorus
+  mvPointTorus,
+  Mode(..)
 )where
 
 import Data.Monoid
@@ -27,7 +28,10 @@ data BefungeState = BefungeState
   {instructions :: Torus BefungeOperation, 
    stack :: [Int],
    arrayLoc :: Point, 
-   dir :: Direction} deriving Show
+   dir :: Direction,
+   mode :: Mode} deriving Show
+
+data Mode = StringMode | Normal deriving Show
 
 --Corresponds to the above definitions
 data BefungeOperation = 
