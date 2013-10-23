@@ -83,6 +83,12 @@ popAscii (BefungeState is (x:xs) loc dir m) = do
   putChar (chr x)
   return $ Right (BefungeState is xs loc dir m)
 
+dup (BefungeState is (x:xs) loc dir m) = Right $ BefungeState is (x:x:xs) loc dir m
+dup (BefungeState _  []     _   _   _) = Left "Error: Empty Stack; cannot duplicate"
+
+swap (BefungeState is (x:y:xs) loc dir m) = Right $ BefungeState is (y:x:xs) loc dir m
+swap (BefungeState _  xs        _  _   _) | length xs < 2 = Left "Error: Too few elements in stack; cannot swap"
+
 --Toggle between strMode and NormalMode
 strMode (BefungeState is xs loc dir m) = BefungeState is xs loc dir $
   case m of
