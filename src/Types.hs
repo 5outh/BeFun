@@ -11,7 +11,9 @@ module Types(
   mkZipperBounded, mkZipper2DBounded,
   mvPointTorus,
   Mode(..),
-  moveTo
+  moveTo, moveTo',
+  getFocus, getFocus',
+  setFocus, setFocus'
 )where
 
 import Data.Monoid
@@ -65,6 +67,21 @@ moveTo t@(Torus zipper w h) p@(x, y) =
      else moveTo (Torus (mv2D D zipper) w h) p
   where (tops, cur, bots)     = zipper
         (lefts, cur', rights) = cur
+
+moveTo' :: BefungeState -> Point -> BefungeState
+moveTo' (BefungeState is xs loc dir m) p = BefungeState (moveTo is p) xs p dir m
+
+setFocus :: Torus a -> a -> Torus a
+setFocus (Torus (a, (l, c, r), b) w h) x = Torus (a, (l, x, r), b) w h
+
+setFocus' :: BefungeState -> BefungeOperation -> BefungeState
+setFocus' (BefungeState is xs loc dir m) op = BefungeState (setFocus is op) xs loc dir m
+
+getFocus :: Torus a -> a
+getFocus (Torus (_, (_, c, _), _) w h) = c
+
+getFocus' :: BefungeState -> BefungeOperation
+getFocus' = getFocus . instructions
 
 --Note that Zippers are Toroidal!
 mvRight :: Zipper a -> Zipper a

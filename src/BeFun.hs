@@ -110,8 +110,18 @@ askInt (BefungeState is xs loc dir m) = do
   then return $ Right (BefungeState is ((digitToInt c) : xs) loc dir m)
   else return $ Left "Error : Pulling digit from non-digit char"
 
-put (BefungeState is xs loc dir m) = undefined
+--p	A "put" call (a way to store a value for later use). Pop y, x and v, then change the character at the position (x,y) in the program to the character with ASCII value v
+put bs@(BefungeState is (y:x:v:xs) loc dir m) = moveTo' swapped loc
+  where bs' = moveTo' bs (x, y)
+        swapped = setFocus' bs' (toOp (chr v))
+        toOp :: Char -> BefungeOperation
+        toOp = undefined
+        
+--g	A "get" call (a way to retrieve data in storage). Pop y and x, then push ASCII value of the character at that position in the program
+get bs@(BefungeState is (y:x:xs) loc dir m) = moveTo' (BefungeState is (op:xs) (x, y) dir m) loc
+  where bs' = moveTo' bs (x, y)
+        op  = ord $ fromOp (getFocus' bs')
+        fromOp :: BefungeOperation -> Char
+        fromOp = undefined
 
-get (BefungeState is xs loc dir m) = undefined
-  
 endProgram _ = exitWith ExitSuccess
