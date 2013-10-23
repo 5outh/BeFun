@@ -10,7 +10,8 @@ module Types(
   mkZipper, mkEmptyZipper,
   mkZipperBounded, mkZipper2DBounded,
   mvPointTorus,
-  Mode(..)
+  Mode(..),
+  moveTo
 )where
 
 import Data.Monoid
@@ -53,7 +54,17 @@ data BefungeOperation =
 instance Monoid BefungeOperation where
   mempty = Empty
   mappend a b = BefungeOps [a, b]
-  
+
+moveTo :: Torus a -> Point -> Torus a
+moveTo t@(Torus zipper w h) p@(x, y) = 
+  if (length tops == y) && (length lefts == x) then t
+     --y coordinate is correct, just find x
+     else if (length tops == y) then
+      moveTo (Torus (mv2D R zipper) w h) p
+     --otherwise, get the y coordinate right
+     else moveTo (Torus (mv2D D zipper) w h) p
+  where (tops, cur, bots)     = zipper
+        (lefts, cur', rights) = cur
 
 --Note that Zippers are Toroidal!
 mvRight :: Zipper a -> Zipper a

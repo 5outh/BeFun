@@ -110,4 +110,8 @@ askInt (BefungeState is xs loc dir m) = do
   then return $ Right (BefungeState is ((digitToInt c) : xs) loc dir m)
   else return $ Left "Error : Pulling digit from non-digit char"
 
+put (BefungeState is xs loc dir m) = undefined
+
+get (BefungeState is xs loc dir m) = undefined
+  
 endProgram _ = exitWith ExitSuccess
