@@ -47,8 +47,16 @@ num a (BefungeState is xs loc dir)= Right $ BefungeState is (a:xs) loc dir
 bsPopFunBinary f (BefungeState is (x:y:xs) loc dir) = Right $ BefungeState is ((f x y):xs) loc dir
 bsPopFunBinary f (BefungeState is xs loc dir) | length xs < 2 = Left "Attempt to perform binary operation without enough numbers in stack"
 
+bsPopFunUnary f (BefungeState is (x:xs) loc dir) = Right $ BefungeState is (f x : xs) loc dir
+bsPopFunUnary f (BefungeState is [] loc dir) = Left "Attempt to perform unary operation with empty stack" 
+
 add     = bsPopFunBinary (+)
 subt    = bsPopFunBinary (-)
 mult    = bsPopFunBinary (*)
 divide  = bsPopFunBinary (\a b -> if a == 0 then 0 else b `div` a)
 modulo  = bsPopFunBinary (\a b -> if a == 0 then 0 else b `mod` a)
+gt      = bsPopFunBinary (\a b -> if b > a then 1 else 0)
+ 
+not'    = bsPopFunUnary (\x -> if x == 0 then 1 else 0)
+
+setDirection d (BefungeState is xs loc _) = BefungeState is xs loc d
