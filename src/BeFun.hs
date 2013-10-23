@@ -45,11 +45,11 @@ end'      = liftF End
 encapsulateF a = liftF ((OperationF a) ())
 add' = encapsulateF Add
 
-program :: Free (OperationF Int) ()
+program :: Program ()
 program = do
   add'
   subt'
-  askNum' 4
+  askNum' 'c'
   end'
 
 showProgram (Free (OperationF a x)) = show a ++ "\n" ++ showProgram x
