@@ -62,6 +62,10 @@ not'    = bsPopFunUnary (\x -> if x == 0 then 1 else 0)
 
 setDirection d (BefungeState is xs loc _ m) = Right $ BefungeState is xs loc d m
 
+moveB (BefungeState is xs loc d m) = Right $ BefungeState is' xs loc' d m
+  where is' = mv is d
+        loc' = mvPointTorus 40 25 d loc --hardcoded boundaries atm...gonna fix this!
+
 popRL bs@(BefungeState is (x:xs) loc dir m) = case x of
         0 -> Right $ BefungeState is xs loc R m
         _ -> Right $ BefungeState is xs loc L m
