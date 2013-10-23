@@ -62,7 +62,7 @@ data Operation a =
 type BefungeOperation = Operation Char
 
 --operation functor for use with the free monad below
-data OperationF a next = OperationF (Operation a) next | End deriving Functor
+data OperationF a next = OperationF (Operation a) next | End deriving (Functor, Show)
 
 --program spec
 type Program = Free (OperationF Char)

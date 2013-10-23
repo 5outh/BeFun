@@ -1,3 +1,4 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-
   From http://en.wikipedia.org/wiki/Befunge#Befunge-93_instruction_list
   0-9	Push this number on the stack
@@ -30,9 +31,6 @@
    (space)	No-op. Does nothing
 -}
 
-
--- TESTING HOME COMPUTER / SOURCETREE
-
 import Types
 import Data.Monoid
 import Control.Monad.State
@@ -40,12 +38,24 @@ import Data.Char(chr, ord, isDigit, digitToInt)
 import System.Exit(exitWith, ExitCode(..))
 import Control.Monad.Free
 
-{- data BefungeState = BefungeState
-  {instructions :: Torus BefungeOperation, 
-   stack :: [Int],
-   arrayLoc :: Point, 
-   dir :: Direction} deriving Show -}
-   
+subt'     = liftF ((OperationF Subt) ())
+askNum' a = liftF ((OperationF (AskNum a)) ())
+end'      = liftF End
+
+encapsulateF a = liftF ((OperationF a) ())
+add' = encapsulateF Add
+
+
+program :: Free (OperationF Int) ()
+program = do
+  add'
+  subt'
+  askNum' 4
+  end'
+
+showProgram (Free (OperationF a x)) = show a ++ "\n" ++ showProgram x
+showProgram (Free End)              = "End"
+
 num a (BefungeState is xs loc dir m)= Right $ BefungeState is (a:xs) loc dir m
 
 bsPopFunBinary f (BefungeState is (x:y:xs) loc dir m) = Right $ BefungeState is ((f x y):xs) loc dir m
