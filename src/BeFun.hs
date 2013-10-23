@@ -35,6 +35,7 @@
 import Types
 import Data.Monoid
 import Control.Monad.State
+import Data.Char(chr)
 
 {- data BefungeState = BefungeState
   {instructions :: Torus BefungeOperation, 
@@ -45,10 +46,10 @@ import Control.Monad.State
 num a (BefungeState is xs loc dir)= Right $ BefungeState is (a:xs) loc dir
 
 bsPopFunBinary f (BefungeState is (x:y:xs) loc dir) = Right $ BefungeState is ((f x y):xs) loc dir
-bsPopFunBinary f (BefungeState is xs loc dir) | length xs < 2 = Left "Attempt to perform binary operation without enough numbers in stack"
+bsPopFunBinary f (BefungeState is xs loc dir) | length xs < 2 = Left "Error: Attempt to perform binary operation without enough numbers in stack"
 
 bsPopFunUnary f (BefungeState is (x:xs) loc dir) = Right $ BefungeState is (f x : xs) loc dir
-bsPopFunUnary f (BefungeState is [] loc dir) = Left "Attempt to perform unary operation with empty stack" 
+bsPopFunUnary f (BefungeState _ []      _   _) = Left "Error: Attempt to perform unary operation with empty stack" 
 
 add     = bsPopFunBinary (+)
 subt    = bsPopFunBinary (-)
@@ -59,4 +60,29 @@ gt      = bsPopFunBinary (\a b -> if b > a then 1 else 0)
  
 not'    = bsPopFunUnary (\x -> if x == 0 then 1 else 0)
 
-setDirection d (BefungeState is xs loc _) = BefungeState is xs loc d
+setDirection d (BefungeState is xs loc _) = Right $ BefungeState is xs loc d
+
+popRL bs@(BefungeState is (x:xs) loc dir) = case x of
+        0 -> Right $ BefungeState is xs loc R
+        _ -> Right $ BefungeState is xs loc L
+popRL (BefungeState _ []      _   _  ) = Left "Error: Empty Stack; cannot perform '_'"
+ 
+popUD bs@(BefungeState is (x:xs) loc dir) = case x of
+  0 -> Right $ BefungeState is xs loc D
+  _ -> Right $ BefungeState is xs loc U
+popUD (BefungeState _ []      _   _  ) = Left $ "Error: Empty Stack; cannot perform '|'"
+
+pop (BefungeState is (x:xs) loc dir) = Right $ BefungeState is xs loc dir
+pop (BefungeState _ []      _   _  ) = Left $ "Error: Empty Stack; cannot pop"
+
+popInt   (BefungeState is (x:xs) loc dir) = do
+  putStr (show x)
+  return $ Right (BefungeState is xs loc dir)
+
+popAscii (BefungeState is (x:xs) loc dir) = do
+  putChar (chr x)
+  return $ Right (BefungeState is xs loc dir)
+
+--Note sure how to implement this 100% yet
+strMode = undefined
+
