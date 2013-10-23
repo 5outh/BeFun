@@ -45,7 +45,6 @@ end'      = liftF End
 encapsulateF a = liftF ((OperationF a) ())
 add' = encapsulateF Add
 
-
 program :: Free (OperationF Int) ()
 program = do
   add'
