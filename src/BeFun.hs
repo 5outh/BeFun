@@ -35,7 +35,8 @@
 import Types
 import Data.Monoid
 import Control.Monad.State
-import Data.Char(chr)
+import Data.Char(chr, ord, isDigit, digitToInt)
+import System.Exit(exitWith, ExitCode(..))
 
 {- data BefungeState = BefungeState
   {instructions :: Torus BefungeOperation, 
@@ -94,7 +95,19 @@ swap (BefungeState is (x:y:xs) loc dir m) = Right $ BefungeState is (y:x:xs) loc
 swap (BefungeState _  xs        _  _   _) | length xs < 2 = Left "Error: Too few elements in stack; cannot swap"
 
 --Toggle between strMode and NormalMode
-strMode (BefungeState is xs loc dir m) = BefungeState is xs loc dir $
+strMode (BefungeState is xs loc dir m) = Right $ BefungeState is xs loc dir $
   case m of
     StringMode -> Normal
     Normal     -> StringMode
+
+askASCII (BefungeState is xs loc dir m) = do
+  c <- getChar
+  return $ Right $ (BefungeState is ((ord c) : xs) loc dir m)
+
+askInt (BefungeState is xs loc dir m) = do
+  c <- getChar
+  if (isDigit c)
+  then return $ Right (BefungeState is ((digitToInt c) : xs) loc dir m)
+  else return $ Left "Error : Pulling digit from non-digit char"
+
+endProgram _ = exitWith ExitSuccess
