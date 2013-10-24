@@ -39,7 +39,7 @@ import System.Exit(exitWith, ExitCode(..))
 import Control.Monad.Free
 
 subt'     = liftF ((OperationF Subt) ())
-askNum' a = liftF ((OperationF (AskNum a)) ())
+askNum'   = liftF ((OperationF AskNum) ())
 end'      = liftF End
 
 encapsulateF a = liftF ((OperationF a) ())
@@ -49,11 +49,23 @@ program :: Program ()
 program = do
   add'
   subt'
-  askNum' 'c'
+  askNum'
   end'
 
 showProgram (Free (OperationF a x)) = show a ++ "\n" ++ showProgram x
 showProgram (Free End)              = "End"
+
+{-
+  STEP 1: Parse Into a BefungeState
+  STEP 2: Figure out program logic and parse into a Free OperationF ()
+  STEP 3: Interpret program logic and perform necessary IO operations
+-}
+
+process :: BefungeState -> Free OperationF ()
+process = error "Not Yet Implemented"
+
+interpret :: Free OperationF () -> IO ()
+interpret = error "Not Yet Implemented"
 
 num a (BefungeState is xs loc dir m)= Right $ BefungeState is (a:xs) loc dir m
 
@@ -72,8 +84,10 @@ gt      = bsPopFunBinary (\a b -> if b > a then 1 else 0)
  
 not'    = bsPopFunUnary (\x -> if x == 0 then 1 else 0)
 
+-- @TODO: Random Direction Handling
 setDirection d (BefungeState is xs loc _ m) = Right $ BefungeState is xs loc d m
 
+-- @TODO : Fix Hardcoded Boundaries
 moveB (BefungeState is xs loc d m) = Right $ BefungeState is' xs loc' d m
   where is' = mv is d
         loc' = mvPointTorus 40 25 d loc --hardcoded boundaries atm...gonna fix this!
@@ -125,14 +139,14 @@ askInt (BefungeState is xs loc dir m) = do
 put bs@(BefungeState is (y:x:v:xs) loc dir m) = moveTo' swapped loc
   where bs' = moveTo' bs (x, y)
         swapped = setFocus' bs' (toOp (chr v))
-        toOp :: Char -> BefungeOperation
+        toOp :: Char -> Free OperationF ()
         toOp = undefined
         
 --g	A "get" call (a way to retrieve data in storage). Pop y and x, then push ASCII value of the character at that position in the program
 get bs@(BefungeState is (y:x:xs) loc dir m) = moveTo' (BefungeState is (op:xs) (x, y) dir m) loc
   where bs' = moveTo' bs (x, y)
         op  = ord $ fromOp (getFocus' bs')
-        fromOp :: BefungeOperation -> Char
+        fromOp :: Free OperationF () -> Char
         fromOp = undefined
 
 endProgram _ = exitWith ExitSuccess
