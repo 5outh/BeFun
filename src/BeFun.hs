@@ -33,10 +33,11 @@
 
 import Types
 import Data.Monoid
-import Control.Monad.State
+import Control.Monad.Trans.State
 import Data.Char(chr, ord, isDigit, digitToInt)
 import System.Exit(exitWith, ExitCode(..))
 import Control.Monad.Free
+import Control.Monad.Random
 
 subt'     = liftF ((OperationF Subt) ())
 askNum'   = liftF ((OperationF AskNum) ())
@@ -87,6 +88,12 @@ not'    = bsPopFunUnary (\x -> if x == 0 then 1 else 0)
 -- @TODO: Random Direction Handling
 setDirection d (BefungeState is xs loc _ m) = Right $ BefungeState is xs loc d m
 
+-- I'm surprised I can do this?
+setRandomDirection :: (RandomGen g) => g -> BefungeState -> Either () BefungeState
+setRandomDirection gen (BefungeState is xs loc _ m) = do
+  let (val, gen') = runRand getRandomDirection gen
+  return (BefungeState is xs loc val m)
+  
 -- @TODO : Fix Hardcoded Boundaries
 moveB (BefungeState is xs loc d m) = Right $ BefungeState is' xs loc' d m
   where is' = mv is d
@@ -136,17 +143,27 @@ askInt (BefungeState is xs loc dir m) = do
   else return $ Left "Error : Pulling digit from non-digit char"
 
 --p	A "put" call (a way to store a value for later use). Pop y, x and v, then change the character at the position (x,y) in the program to the character with ASCII value v
-put bs@(BefungeState is (y:x:v:xs) loc dir m) = moveTo' swapped loc
+putOp bs@(BefungeState is (y:x:v:xs) loc dir m) = moveTo' swapped loc
   where bs' = moveTo' bs (x, y)
         swapped = setFocus' bs' (toOp (chr v))
         toOp :: Char -> Free OperationF ()
         toOp = undefined
         
 --g	A "get" call (a way to retrieve data in storage). Pop y and x, then push ASCII value of the character at that position in the program
-get bs@(BefungeState is (y:x:xs) loc dir m) = moveTo' (BefungeState is (op:xs) (x, y) dir m) loc
+getOp bs@(BefungeState is (y:x:xs) loc dir m) = moveTo' (BefungeState is (op:xs) (x, y) dir m) loc
   where bs' = moveTo' bs (x, y)
         op  = ord $ fromOp (getFocus' bs')
         fromOp :: Free OperationF () -> Char
         fromOp = undefined
 
 endProgram _ = exitWith ExitSuccess
+
+getRandomDirection :: RandomGen g => Rand g Direction
+getRandomDirection = do
+  a <- getRandomR (0,3)
+  return ([L,R,U,D] !! a)
+
+main = do
+  dir <- evalRandIO getRandomDirection
+  return ()
+  

@@ -21,7 +21,8 @@ module Types(
   Program,
   Free(..),
   liftOp,
-  charToOp
+  charToOp,
+  befungeStartState
 )where
 
 import Data.Monoid
@@ -45,6 +46,13 @@ data BefungeState = BefungeState
    dir :: Direction,
    mode :: Mode} deriving Show
 
+befungeStartState = 
+  BefungeState (Torus ([], ([], (liftF End), []), []) 10 10)
+               []
+               (0, 0)
+               R
+               Normal
+   
 data Mode = StringMode | Normal deriving Show
 
 --Corresponds to the above definitions
