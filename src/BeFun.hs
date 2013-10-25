@@ -33,44 +33,16 @@
 
 import Types
 import FunctionProcesses
+import BefungeParser
 import Control.Monad.Trans
 import Control.Monad.State
 import Control.Monad.Random
 import System.Exit
 
-
-{-
-  Notes: 
-    -StdGen necessary due to random direction computation
-    -Start point necessary for Continuations
--}
-  
-{-
-data Operation =
-  Number Int
-  | Add | Subt | Mult | Div | Mod | Not | GT
-  | Dir Direction | RandDir StdGen
-  | PopRight | PopLeft
-  | Str
-  | Duplicate | Swap
-  | PopDiscard | PopOutputInt | PopOutputAscii
-  | Skip
-  | Put | Get
-  | AskNum | AskChar
-  | Empty
-  | Other Char
-  | BefungeOps [Operation] -- purely for Monoid instance
-  deriving (Show, Eq)  
--}
-
-
 {-
   Main Idea:
     STEP 1: Parse Into a BefungeState
-    STEP 2: Figure out program logic and parse into a Free OperationF ()
-    STEP 3: Interpret program logic and perform necessary IO operations
-      -Sub Step 3: When Put or Get is called, modify Torus State but keep stack,
-                   position and mode in tact. Re-process. Re-run from current `loc`
+    STEP 2: Process events on the torus as they come in, modifying as needed in a StateT BefungeState IO ()
 -}
 
 main = undefined
