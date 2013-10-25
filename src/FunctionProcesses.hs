@@ -27,15 +27,16 @@ bsPopFunBinary f (BefungeState is xs loc dir m r) | length xs < 2 = Left "Error:
 bsPopFunUnary f (BefungeState is (x:xs) loc dir m r) = Right $ BefungeState is (f x : xs) loc dir m r
 bsPopFunUnary f (BefungeState _ []      _   _   _ _) = Left "Error: Attempt to perform unary operation with empty stack" 
 
+add, subt, mult, divide, modulo, gt, not' :: BefungeState -> Either String BefungeState
 add     = bsPopFunBinary (+)
 subt    = bsPopFunBinary (-)
 mult    = bsPopFunBinary (*)
 divide  = bsPopFunBinary (\a b -> if a == 0 then 0 else b `div` a)
 modulo  = bsPopFunBinary (\a b -> if a == 0 then 0 else b `mod` a)
-gt      = bsPopFunBinary (\a b -> if b > a then 1 else 0)
- 
+gt      = bsPopFunBinary (\a b -> if b > a then 1 else 0) 
 not'    = bsPopFunUnary (\x -> if x == 0 then 1 else 0)
 
+setDirection :: Direction -> BefungeState -> Either String BefungeState
 setDirection d (BefungeState is xs loc _ m r) = Right $ BefungeState is xs loc d m r
 
 -- @TODO: Random Direction Handling (Give back a new StdGen)
@@ -48,8 +49,9 @@ getRandomDirection :: RandomGen g => Rand g Direction
 getRandomDirection = do
   a <- getRandomR (0,3)
   return ([L,R,U,D] !! a)
-  
+
 -- @TODO : Fix Hardcoded Boundaries
+moveB, popRL, popUD, pop :: BefungeState -> Either String BefungeState
 moveB (BefungeState is xs loc d m r) = Right $ BefungeState is' xs loc' d m r
   where is' = mv is d
         loc' = mvPointTorus 40 25 d loc --hardcoded boundaries atm...gonna fix this!
@@ -67,14 +69,7 @@ popUD (BefungeState    _  []     _   _   _ _) = Left $ "Error: Empty Stack; cann
 pop (BefungeState is (x:xs) loc dir m r) = Right $ BefungeState is xs loc dir m r
 pop (BefungeState _ []      _   _   _ _) = Left $ "Error: Empty Stack; cannot pop"
 
-popInt   (BefungeState is (x:xs) loc dir m r) = do
-  putStr (show x)
-  return $ Right (BefungeState is xs loc dir m r)
-
-popAscii (BefungeState is (x:xs) loc dir m r) = do
-  putChar (chr x)
-  return $ Right (BefungeState is xs loc dir m r)
-
+dup, swap, strMode :: BefungeState -> Either String BefungeState
 dup (BefungeState is (x:xs) loc dir m r) = Right $ BefungeState is (x:x:xs) loc dir m r
 dup (BefungeState _  []     _   _   _ _) = Left "Error: Empty Stack; cannot duplicate"
 
@@ -88,6 +83,10 @@ strMode (BefungeState is xs loc dir m r) = Right $ BefungeState is xs loc dir
     Normal     -> StringMode)
   r
 
+{-
+  IO Operations
+-}
+askAscii, askInt, popInt, popAscii :: BefungeState -> IO (Either String BefungeState)
 askAscii (BefungeState is xs loc dir m r) = do
   c <- getChar
   return $ Right $ BefungeState is ((ord c) : xs) loc dir m r
@@ -98,15 +97,24 @@ askInt (BefungeState is xs loc dir m r) = do
   then return $ Right (BefungeState is ((digitToInt c) : xs) loc dir m r)
   else return $ Left "Error : Pulling digit from non-digit char"
 
+popInt (BefungeState is (x:xs) loc dir m r) = do
+  putStr (show x)
+  return $ Right (BefungeState is xs loc dir m r)
+
+popAscii (BefungeState is (x:xs) loc dir m r) = do
+  putChar (chr x)
+  return $ Right (BefungeState is xs loc dir m r)
+  
 --p	A "put" call (a way to store a value for later use). Pop y, x and v, then change the character at the position (x,y) in the program to the character with ASCII value v
-putOp bs@(BefungeState is (y:x:v:xs) loc dir m r) = moveTo' swapped loc
+putOp, getOp :: BefungeState -> Either String BefungeState
+putOp bs@(BefungeState is (y:x:v:xs) loc dir m r) = Right $ moveTo' swapped loc
   where bs' = moveTo' bs (x, y)
         swapped = setFocus' bs' (toOp (chr v))
         toOp :: Char -> Operation
         toOp = undefined
         
 --g	A "get" call (a way to retrieve data in storage). Pop y and x, then push ASCII value of the character at that position in the program
-getOp bs@(BefungeState is (y:x:xs) loc dir m r) = moveTo' (BefungeState is (op:xs) (x, y) dir m r) loc
+getOp bs@(BefungeState is (y:x:xs) loc dir m r) = Right $ moveTo' (BefungeState is (op:xs) (x, y) dir m r) loc
   where bs' = moveTo' bs (x, y)
         op  = ord $ fromOp (getFocus' bs')
         fromOp :: Operation -> Char
