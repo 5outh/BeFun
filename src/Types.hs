@@ -48,7 +48,7 @@ data BefungeState = BefungeState
    mode :: Mode} deriving Show
 
 befungeStartState = 
-  BefungeState (Torus ([], ([], (liftF End), []), []) 60 25)
+  BefungeState (Torus ([], ([], (liftOp Empty), []), []) 60 25)
                []
                (0, 0)
                R
@@ -69,7 +69,7 @@ data Operation =
   | Put | Get
   | AskNum | AskChar
   | Empty
-  | Other Char
+  | Other Char --string mode
   | BefungeOps [Operation] -- purely for Monoid instance
   deriving (Show, Eq)
 
@@ -82,6 +82,13 @@ type BefungeOperation = Operation
 --operation functor for use with the free monad below
 data OperationF next = OperationF Operation next | End deriving (Functor, Show)
 
+-- Altered Operation
+data OperationF' next = OperationF' Operation next
+                        | Skip' next
+                        | Continue ContOp next
+                        | End' deriving (Functor, Show)
+
+data ContOp = PopRight' | PopLeft' | Put' | Get' deriving (Show, Eq)
 -- I can't think of a better way of doing this, so it'll work for now.
 -- lifts an Operation to a Free (OperationF a)
 liftOp :: Operation -> Free OperationF ()
@@ -116,6 +123,7 @@ charToOp gen c | c `elem` ['0'..'9'] = liftOp (Number (digitToInt c))
                   '&'  -> liftOp AskNum
                   '~'  -> liftOp AskChar
                   '@'  -> liftF End
+                  ' '  -> liftOp Empty
                   _   -> liftOp (Other c)
 
 -- Not even a valid monoid instance...

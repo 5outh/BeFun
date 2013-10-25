@@ -58,27 +58,12 @@ import System.Exit
 
 -}
 
-
-
 {-
   Notes: 
     -StdGen necessary due to random direction computation
     -Start point necessary for Continuations
 -}
-
---process :: StdGen -> Point -> BefungeState -> Free OperationF ()
-process g p@(x, y) = do
-  bs <- lift get
-  -- move to p
-  modify (flip moveTo' p)
-  return ()
-
-interpret :: Free OperationF () -> IO ()
-interpret (Free End) = return ()
-interpret (Free (OperationF a x)) = do 
-  processRequest a
-  interpret x
-
+  
 {-
 data Operation =
   Number Int
@@ -96,8 +81,6 @@ data Operation =
   | BefungeOps [Operation] -- purely for Monoid instance
   deriving (Show, Eq)  
 -}
- 
-processRequest (Number x) = undefined
 
 
 {-
