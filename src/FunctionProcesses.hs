@@ -37,10 +37,9 @@ gt      = bsPopFunBinary (\a b -> if b > a then 1 else 0)
  
 not'    = bsPopFunUnary (\x -> if x == 0 then 1 else 0)
 
--- @TODO: Random Direction Handling
 setDirection d (BefungeState is xs loc _ m) = Right $ BefungeState is xs loc d m
 
--- I'm surprised I can do this?
+-- @TODO: Random Direction Handling (Give back a new StdGen)
 setRandomDirection :: (RandomGen g) => g -> BefungeState -> Either () BefungeState
 setRandomDirection gen (BefungeState is xs loc _ m) = do
   let (val, gen') = runRand getRandomDirection gen

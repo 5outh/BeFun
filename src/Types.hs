@@ -82,13 +82,28 @@ type BefungeOperation = Operation
 --operation functor for use with the free monad below
 data OperationF next = OperationF Operation next | End deriving (Functor, Show)
 
--- Altered Operation
-data OperationF' next = OperationF' Operation next
-                        | Skip' next
-                        | Continue ContOp next
+-- Altered Operations, this is where my experimentation is happening!
+data Operation' = 
+  Number' Int
+  | Add' | Subt' | Mult' | Div' | Mod' | Not' | GT'
+  | Duplicate' | Swap'
+  | PopDiscard' | PopOutputInt' | PopOutputAscii'
+  | AskNum' | AskChar'
+  | Empty'
+  | Other' Char
+  | Ops' [Operation]
+  deriving (Show, Eq)
+
+--only encapsulates program direction flow
+data MoveOp = Dir' Direction | RandDir' StdGen | Skip' deriving (Show, Eq)
+  
+--only encapsulates runtime flow
+data OperationF' next = OperationF' Operation' next
+                        | Continue ContOp
                         | End' deriving (Functor, Show)
 
 data ContOp = PopRight' | PopLeft' | Put' | Get' deriving (Show, Eq)
+
 -- I can't think of a better way of doing this, so it'll work for now.
 -- lifts an Operation to a Free (OperationF a)
 liftOp :: Operation -> Free OperationF ()
