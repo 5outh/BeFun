@@ -4,6 +4,7 @@ module Types(
   BefungeState(..),
   BefungeOperation(..),
   Direction(..),
+  Point(..),
   Torus(..),
   Zipper(..),
   Zipper2D(..),
@@ -27,6 +28,7 @@ module Types(
 import Data.Monoid
 import Control.Monad.Free
 import Data.Char
+import System.Random
 
 data Direction = L | R | U | D deriving (Show, Eq)
 
@@ -46,7 +48,7 @@ data BefungeState = BefungeState
    mode :: Mode} deriving Show
 
 befungeStartState = 
-  BefungeState (Torus ([], ([], (liftF End), []), []) 10 10)
+  BefungeState (Torus ([], ([], (liftF End), []), []) 60 25)
                []
                (0, 0)
                R
@@ -58,7 +60,7 @@ data Mode = StringMode | Normal deriving Show
 data Operation =
   Number Int
   | Add | Subt | Mult | Div | Mod | Not | GT
-  | Dir Direction | RandDir
+  | Dir Direction | RandDir StdGen
   | PopRight | PopLeft
   | Str
   | Duplicate | Swap
@@ -70,7 +72,11 @@ data Operation =
   | Other Char
   | BefungeOps [Operation] -- purely for Monoid instance
   deriving (Show, Eq)
-  
+
+-- LOL, to make Operations derive equality -____-
+instance Eq StdGen where
+  (==) a b = True
+
 type BefungeOperation = Operation
 
 --operation functor for use with the free monad below
@@ -81,36 +87,36 @@ data OperationF next = OperationF Operation next | End deriving (Functor, Show)
 liftOp :: Operation -> Free OperationF ()
 liftOp a = liftF ((OperationF a) ())
 
-charToOp :: Char -> Free OperationF ()
-charToOp c | c `elem` ['0'..'9'] = liftOp (Number (digitToInt c))
-           | otherwise = case c of
-              '+'  -> liftOp Add
-              '-'  -> liftOp Subt
-              '*'  -> liftOp Mult
-              '/'  -> liftOp Div
-              '%'  -> liftOp Mod
-              '!'  -> liftOp Not
-              '`'  -> liftOp Types.GT
-              '>'  -> liftOp (Dir R)
-              '<'  -> liftOp (Dir L)
-              '^'  -> liftOp (Dir U)
-              'v'  -> liftOp (Dir D)
-              '?'  -> liftOp RandDir
-              '_'  -> liftOp PopRight
-              '|'  -> liftOp PopLeft
-              '\"' -> liftOp Str
-              ':'  -> liftOp Duplicate
-              '\\' -> liftOp Swap
-              '$'  -> liftOp PopDiscard
-              '.'  -> liftOp PopOutputInt
-              ','  -> liftOp PopOutputAscii
-              '#'  -> liftOp Skip
-              'p'  -> liftOp Put
-              'g'  -> liftOp Get
-              '&'  -> liftOp AskNum
-              '~'  -> liftOp AskChar
-              '@'  -> liftF End
-              _   -> liftOp (Other c)
+charToOp :: StdGen -> Char -> Free OperationF ()
+charToOp gen c | c `elem` ['0'..'9'] = liftOp (Number (digitToInt c))
+               | otherwise = case c of
+                  '+'  -> liftOp Add
+                  '-'  -> liftOp Subt
+                  '*'  -> liftOp Mult
+                  '/'  -> liftOp Div
+                  '%'  -> liftOp Mod
+                  '!'  -> liftOp Not
+                  '`'  -> liftOp Types.GT
+                  '>'  -> liftOp (Dir R)
+                  '<'  -> liftOp (Dir L)
+                  '^'  -> liftOp (Dir U)
+                  'v'  -> liftOp (Dir D)
+                  '?'  -> liftOp (RandDir gen)
+                  '_'  -> liftOp PopRight
+                  '|'  -> liftOp PopLeft
+                  '\"' -> liftOp Str
+                  ':'  -> liftOp Duplicate
+                  '\\' -> liftOp Swap
+                  '$'  -> liftOp PopDiscard
+                  '.'  -> liftOp PopOutputInt
+                  ','  -> liftOp PopOutputAscii
+                  '#'  -> liftOp Skip
+                  'p'  -> liftOp Put
+                  'g'  -> liftOp Get
+                  '&'  -> liftOp AskNum
+                  '~'  -> liftOp AskChar
+                  '@'  -> liftF End
+                  _   -> liftOp (Other c)
 
 -- Not even a valid monoid instance...
 instance Monoid Operation where

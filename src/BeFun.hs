@@ -33,9 +33,11 @@
 
 import Types
 import FunctionProcesses
-import Control.Monad.Trans.State
+import Control.Monad.Trans
+import Control.Monad.State
 import Control.Monad.Free
 import Control.Monad.Random
+import System.Exit
 
 {-
   Example Program For Reference
@@ -56,19 +58,55 @@ import Control.Monad.Random
 
 -}
 
+
+
+{-
+  Notes: 
+    -StdGen necessary due to random direction computation
+    -Start point necessary for Continuations
+-}
+
+--process :: StdGen -> Point -> BefungeState -> Free OperationF ()
+process g p@(x, y) = do
+  bs <- lift get
+  -- move to p
+  modify (flip moveTo' p)
+  return ()
+
+interpret :: Free OperationF () -> IO ()
+interpret (Free End) = return ()
+interpret (Free (OperationF a x)) = do 
+  processRequest a
+  interpret x
+
+{-
+data Operation =
+  Number Int
+  | Add | Subt | Mult | Div | Mod | Not | GT
+  | Dir Direction | RandDir StdGen
+  | PopRight | PopLeft
+  | Str
+  | Duplicate | Swap
+  | PopDiscard | PopOutputInt | PopOutputAscii
+  | Skip
+  | Put | Get
+  | AskNum | AskChar
+  | Empty
+  | Other Char
+  | BefungeOps [Operation] -- purely for Monoid instance
+  deriving (Show, Eq)  
+-}
+ 
+processRequest (Number x) = undefined
+
+
 {-
   Main Idea:
     STEP 1: Parse Into a BefungeState
     STEP 2: Figure out program logic and parse into a Free OperationF ()
     STEP 3: Interpret program logic and perform necessary IO operations
+      -Sub Step 3: When Put or Get is called, modify Torus State but keep stack,
+                   position and mode in tact. Re-process. Re-run from current `loc`
 -}
 
---Note: StdGen necessary due to random direction computation
-process :: StdGen -> BefungeState -> Free OperationF ()
-process = error "Not Yet Implemented"
-
-interpret :: Free OperationF () -> IO ()
-interpret = error "Not Yet Implemented"
-
 main = undefined
-  
