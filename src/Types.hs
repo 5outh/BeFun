@@ -18,7 +18,6 @@ module Types(
   setFocus, setFocus',
   Operation(..),
   OperationF(..),
-  Program,
   Free(..),
   liftOp,
   charToOp,
@@ -96,7 +95,7 @@ charToOp c | c `elem` ['0'..'9'] = liftOp (Number (digitToInt c))
               '<'  -> liftOp (Dir L)
               '^'  -> liftOp (Dir U)
               'v'  -> liftOp (Dir D)
-              '?'  -> error "Undefined: Random Direction Operation"
+              '?'  -> liftOp RandDir
               '_'  -> liftOp PopRight
               '|'  -> liftOp PopLeft
               '\"' -> liftOp Str
@@ -112,9 +111,6 @@ charToOp c | c `elem` ['0'..'9'] = liftOp (Number (digitToInt c))
               '~'  -> liftOp AskChar
               '@'  -> liftF End
               _   -> liftOp (Other c)
-
---program spec
-type Program = Free OperationF
 
 -- Not even a valid monoid instance...
 instance Monoid Operation where
