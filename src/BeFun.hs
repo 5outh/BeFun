@@ -50,14 +50,17 @@ import Control.Monad.Random
     subt'
     askNum'
     end'
+
+  showProgram (Free (OperationF a x)) = show a ++ "\n" ++ showProgram x
+  showProgram (Free End)              = "End"
+
 -}
-showProgram (Free (OperationF a x)) = show a ++ "\n" ++ showProgram x
-showProgram (Free End)              = "End"
 
 {-
-  STEP 1: Parse Into a BefungeState
-  STEP 2: Figure out program logic and parse into a Free OperationF ()
-  STEP 3: Interpret program logic and perform necessary IO operations
+  Main Idea:
+    STEP 1: Parse Into a BefungeState
+    STEP 2: Figure out program logic and parse into a Free OperationF ()
+    STEP 3: Interpret program logic and perform necessary IO operations
 -}
 
 --Note: StdGen necessary due to random direction computation
