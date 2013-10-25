@@ -2,7 +2,7 @@
 
 module Types(
   BefungeState(..),
-  BefungeOperation(..),
+  Operation(..),
   Direction(..),
   Point(..),
   Torus(..),
@@ -17,16 +17,10 @@ module Types(
   moveTo, moveTo',
   getFocus, getFocus',
   setFocus, setFocus',
-  Operation(..),
-  OperationF(..),
-  Free(..),
-  liftOp,
   charToOp,
-  befungeStartState
 )where
 
 import Data.Monoid
-import Control.Monad.Free
 import Data.Char
 import System.Random
 
@@ -41,18 +35,15 @@ type Zipper2D a = Zipper (Zipper a)
 
 -- @TODO : Figure out actual type of instructions...
 data BefungeState = BefungeState
-  {instructions :: Torus (Free OperationF ()), 
-   stack :: [Int],
-   arrayLoc :: Point, 
-   dir :: Direction,
-   mode :: Mode} deriving Show
+  {
+    instructions :: Torus Operation, 
+    stack :: [Int],
+    arrayLoc :: Point, 
+    dir :: Direction,
+    mode :: Mode,
+    rng :: StdGen
+  } deriving Show
 
-befungeStartState = 
-  BefungeState (Torus ([], ([], (liftOp Empty), []), []) 60 25)
-               []
-               (0, 0)
-               R
-               Normal
    
 data Mode = StringMode | Normal deriving Show
 
@@ -60,7 +51,7 @@ data Mode = StringMode | Normal deriving Show
 data Operation =
   Number Int
   | Add | Subt | Mult | Div | Mod | Not | GT
-  | Dir Direction | RandDir StdGen
+  | Dir Direction | RandDir
   | PopRight | PopLeft
   | Str
   | Duplicate | Swap
@@ -70,76 +61,41 @@ data Operation =
   | AskNum | AskChar
   | Empty
   | Other Char --string mode
+  | End
   | BefungeOps [Operation] -- purely for Monoid instance
   deriving (Show, Eq)
 
--- LOL, to make Operations derive equality -____-
-instance Eq StdGen where
-  (==) a b = True
-
-type BefungeOperation = Operation
-
---operation functor for use with the free monad below
-data OperationF next = OperationF Operation next | End deriving (Functor, Show)
-
--- Altered Operations, this is where my experimentation is happening!
-data Operation' = 
-  Number' Int
-  | Add' | Subt' | Mult' | Div' | Mod' | Not' | GT'
-  | Duplicate' | Swap'
-  | PopDiscard' | PopOutputInt' | PopOutputAscii'
-  | AskNum' | AskChar'
-  | Empty'
-  | Other' Char
-  | Ops' [Operation]
-  deriving (Show, Eq)
-
---only encapsulates program direction flow
-data MoveOp = Dir' Direction | RandDir' StdGen | Skip' deriving (Show, Eq)
-  
---only encapsulates runtime flow
-data OperationF' next = OperationF' Operation' next
-                        | Continue ContOp
-                        | End' deriving (Functor, Show)
-
-data ContOp = PopRight' | PopLeft' | Put' | Get' deriving (Show, Eq)
-
--- I can't think of a better way of doing this, so it'll work for now.
--- lifts an Operation to a Free (OperationF a)
-liftOp :: Operation -> Free OperationF ()
-liftOp a = liftF ((OperationF a) ())
-
-charToOp :: StdGen -> Char -> Free OperationF ()
-charToOp gen c | c `elem` ['0'..'9'] = liftOp (Number (digitToInt c))
-               | otherwise = case c of
-                  '+'  -> liftOp Add
-                  '-'  -> liftOp Subt
-                  '*'  -> liftOp Mult
-                  '/'  -> liftOp Div
-                  '%'  -> liftOp Mod
-                  '!'  -> liftOp Not
-                  '`'  -> liftOp Types.GT
-                  '>'  -> liftOp (Dir R)
-                  '<'  -> liftOp (Dir L)
-                  '^'  -> liftOp (Dir U)
-                  'v'  -> liftOp (Dir D)
-                  '?'  -> liftOp (RandDir gen)
-                  '_'  -> liftOp PopRight
-                  '|'  -> liftOp PopLeft
-                  '\"' -> liftOp Str
-                  ':'  -> liftOp Duplicate
-                  '\\' -> liftOp Swap
-                  '$'  -> liftOp PopDiscard
-                  '.'  -> liftOp PopOutputInt
-                  ','  -> liftOp PopOutputAscii
-                  '#'  -> liftOp Skip
-                  'p'  -> liftOp Put
-                  'g'  -> liftOp Get
-                  '&'  -> liftOp AskNum
-                  '~'  -> liftOp AskChar
-                  '@'  -> liftF End
-                  ' '  -> liftOp Empty
-                  _   -> liftOp (Other c)
+charToOp :: Char -> Operation
+charToOp  c | c `elem` ['0'..'9'] =   (Number (digitToInt c))
+            | otherwise = case c of
+                '+'  ->  Add
+                '-'  ->  Subt
+                '*'  ->  Mult
+                '/'  ->  Div
+                '%'  ->  Mod
+                '!'  ->  Not
+                '`'  ->  Types.GT
+                '>'  ->  Dir R
+                '<'  ->  Dir L
+                '^'  ->  Dir U
+                'v'  ->  Dir D
+                '?'  ->  RandDir
+                '_'  ->  PopRight
+                '|'  ->  PopLeft
+                '\"' ->  Str
+                ':'  ->  Duplicate
+                '\\' ->  Swap
+                '$'  ->  PopDiscard
+                '.'  ->  PopOutputInt
+                ','  ->  PopOutputAscii
+                '#'  ->  Skip
+                'p'  ->  Put
+                'g'  ->  Get
+                '&'  ->  AskNum
+                '~'  ->  AskChar
+                '@'  ->  End
+                ' '  ->  Empty
+                _   ->   (Other c)
 
 -- Not even a valid monoid instance...
 instance Monoid Operation where
@@ -158,18 +114,18 @@ moveTo t@(Torus zipper w h) p@(x, y) =
         (lefts, cur', rights) = cur
 
 moveTo' :: BefungeState -> Point -> BefungeState
-moveTo' (BefungeState is xs loc dir m) p = BefungeState (moveTo is p) xs p dir m
+moveTo' (BefungeState is xs loc dir m r) p = BefungeState (moveTo is p) xs p dir m r
 
 setFocus :: Torus a -> a -> Torus a
 setFocus (Torus (a, (l, c, r), b) w h) x = Torus (a, (l, x, r), b) w h
 
-setFocus' :: BefungeState -> Free OperationF () -> BefungeState
-setFocus' (BefungeState is xs loc dir m) op = BefungeState (setFocus is op) xs loc dir m
+setFocus' :: BefungeState -> Operation -> BefungeState
+setFocus' (BefungeState is xs loc dir m r) op = BefungeState (setFocus is op) xs loc dir m r
 
 getFocus :: Torus a -> a
 getFocus (Torus (_, (_, c, _), _) w h) = c
 
-getFocus' :: BefungeState -> Free OperationF ()
+getFocus' :: BefungeState -> Operation
 getFocus' = getFocus . instructions
 
 --Note that Zippers are Toroidal!

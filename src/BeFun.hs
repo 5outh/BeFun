@@ -35,28 +35,9 @@ import Types
 import FunctionProcesses
 import Control.Monad.Trans
 import Control.Monad.State
-import Control.Monad.Free
 import Control.Monad.Random
 import System.Exit
 
-{-
-  Example Program For Reference
-  add' = liftOp Add
-  subt' = liftOp Subt
-  askNum = liftOp AskNum
-  end = liftF End
-
-  program :: Free OperationF ()
-  program = do
-    add'
-    subt'
-    askNum'
-    end'
-
-  showProgram (Free (OperationF a x)) = show a ++ "\n" ++ showProgram x
-  showProgram (Free End)              = "End"
-
--}
 
 {-
   Notes: 
