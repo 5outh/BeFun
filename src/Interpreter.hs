@@ -1,4 +1,5 @@
 module Interpreter(
+  execute
 )
 
 where
@@ -17,8 +18,9 @@ execute :: StateT (Either String BefungeState) IO ()
 execute = do
   bs <- get
   let bs' = fromEither bs
-      modifyE = modify . (. fromEither)
+      modifyE = modify . (. fromEither) . fix
   case (getFocus' bs') of
+    Number n -> modifyE (num n)
     Add ->  modifyE add
     Subt -> modifyE subt
     Mult -> modifyE mult
@@ -42,7 +44,9 @@ execute = do
     AskChar -> askAscii
     End -> return () -- perhaps this could be done better
     Empty -> modify id
-    Other c -> modify id -- idfk
-  modifyE moveB
-  execute -- I think this will work...
+    Other c -> modifyE readChar
+  if getFocus' bs' == End then return ()
+  else do
+    modifyE moveB
+    execute -- I think this will work...
     

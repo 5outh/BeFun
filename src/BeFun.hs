@@ -65,6 +65,8 @@ main = do
   args <- getArgs
   bfstate <- handleArgs args
   putStrLn $ (showInstructions $ instructions bfstate)
+  runStateT execute (Right bfstate)
+  print (instructions bfstate)
   return ()
   
   

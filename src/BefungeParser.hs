@@ -16,7 +16,7 @@ import Control.Monad.Trans
 
 operator :: GenParser Char st Operation
 operator = do
-  c <- oneOf "0123456789+-*/%!`><^v?_|\":\\$.,#pg&~@ "
+  c <- noneOf "\r\n"
   return $ charToOp c
   
 line :: GenParser Char st [Operation]
@@ -39,5 +39,5 @@ parseBefungeInstructions s = case (parse instrs "unknown" s) of
 test = do
   b <- readFile "../befunge_test.bf"
   let x = parseBefungeInstructions b 
-  putStrLn (showInstructions x) 
+  putStrLn (showInstructions x)
   return ()

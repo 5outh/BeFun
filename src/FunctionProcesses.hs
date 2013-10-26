@@ -1,5 +1,7 @@
 module FunctionProcesses(
+  fix,
   num,
+  readChar,
   add, subt, mult, divide, modulo, gt, not',
   setDirection, setRandomDirection,
   moveB, 
@@ -24,6 +26,14 @@ import Control.Monad.Trans.State
 import Control.Monad.Random
 
 
+fix f bs@(BefungeState _ _ _ _ m _) | m == Normal = f bs
+                                    | otherwise = readChar bs
+
+readChar bs@(BefungeState is xs loc dir m r) = let focus = getFocus' bs in
+  case focus of
+    Str -> Right $ BefungeState is xs loc dir Normal r
+    _   -> Right $ BefungeState is ((ord $ opToChar focus):xs) loc dir m r
+                                    
 bsPopFunBinary f (BefungeState is (x:y:xs) loc dir m r) = Right $ BefungeState is ((f x y):xs) loc dir m r
 bsPopFunBinary f (BefungeState is xs loc dir m r) | length xs < 2 = Left "Error: Attempt to perform binary operation without enough numbers in stack"
 

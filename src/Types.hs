@@ -53,7 +53,7 @@ data BefungeState = BefungeState
   } deriving Show
 
    
-data Mode = StringMode | Normal deriving Show
+data Mode = StringMode | Normal deriving (Show, Eq)
 
 --Corresponds to the above definitions
 data Operation =
