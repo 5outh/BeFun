@@ -35,12 +35,12 @@ execute = do
     PopDiscard -> modifyE pop
     PopOutputInt -> popInt
     PopOutputAscii -> popAscii
-    Skip -> modifyE moveB -- just skip the next instruction
+    Skip -> modifyE moveB -- just move ahead to next instruction
     Put -> modifyE putOp
     Get -> modifyE getOp
     AskNum -> askInt
     AskChar -> askAscii
-    End -> return () --end everything
+    End -> return () -- perhaps this could be done better
     Empty -> modify id
     Other c -> modify id -- idfk
   modifyE moveB

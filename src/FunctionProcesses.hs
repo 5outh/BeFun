@@ -7,7 +7,8 @@ module FunctionProcesses(
   dup, swap,
   strMode,
   askAscii, askInt,
-  putOp, getOp
+  putOp, getOp,
+  endProgram
 )
 
 where

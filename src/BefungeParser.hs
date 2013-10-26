@@ -1,5 +1,5 @@
 module BefungeParser(
-  operator
+  parseBefungeInstructions
 )
 
 where
