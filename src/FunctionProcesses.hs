@@ -14,9 +14,12 @@ where
 
 import Types
 import Data.Monoid
-import Control.Monad.Trans.State
+
 import Data.Char(chr, ord, isDigit, digitToInt)
 import System.Exit(exitWith, ExitCode(..))
+import Control.Monad
+import Control.Monad.Trans
+import Control.Monad.Trans.State
 import Control.Monad.Random
 
 num a (BefungeState is xs loc dir m r)= Right $ BefungeState is (a:xs) loc dir m r
@@ -86,24 +89,47 @@ strMode (BefungeState is xs loc dir m r) = Right $ BefungeState is xs loc dir
 {-
   IO Operations
 -}
-askAscii, askInt, popInt, popAscii :: BefungeState -> IO (Either String BefungeState)
-askAscii (BefungeState is xs loc dir m r) = do
-  c <- getChar
-  return $ Right $ BefungeState is ((ord c) : xs) loc dir m r
 
-askInt (BefungeState is xs loc dir m r) = do
-  c <- getChar
+putEither f = do
+  bs <- get
+  case bs of
+    Right bs' -> put $ f bs' 
+    _         -> put $ Left "Error: An error occurred when processing your request"
+
+askAscii, askInt, popInt, popAscii :: StateT (Either String BefungeState) IO ()
+askAscii = do
+  c <- lift getChar
+  bs <- get
+  case bs of
+    (Right (BefungeState is xs loc dir m r)) ->
+      put $ Right $ BefungeState is ((ord c) : xs) loc dir m r
+    _ -> put $ Left "Error: Passing an error message into askAscii"
+
+askInt = do
+  c <- lift getChar
+  bs <- get
   if (isDigit c)
-  then return $ Right (BefungeState is ((digitToInt c) : xs) loc dir m r)
-  else return $ Left "Error : Pulling digit from non-digit char"
+  then case bs of
+    Right (BefungeState is xs loc dir m r) -> 
+     put $ Right (BefungeState is ((digitToInt c) : xs) loc dir m r)
+    _ -> put $ Left "Error: An error occurred while processing your request"
+  else put $ Left "Error : Pulling digit from non-digit char"
 
-popInt (BefungeState is (x:xs) loc dir m r) = do
-  putStr (show x)
-  return $ Right (BefungeState is xs loc dir m r)
+popInt = do
+  bs <- get
+  case bs of
+    Right (BefungeState is (x:xs) loc dir m r) -> do
+      lift $ putStr (show x)
+      put $ Right (BefungeState is xs loc dir m r)
+    _ -> put $ Left "Error: An error occurred while processing your request"
 
-popAscii (BefungeState is (x:xs) loc dir m r) = do
-  putChar (chr x)
-  return $ Right (BefungeState is xs loc dir m r)
+popAscii = do
+  bs <- get
+  case bs of
+    Right (BefungeState is (x:xs) loc dir m r) -> do
+     lift $ putChar (chr x)
+     put $ Right (BefungeState is xs loc dir m r)
+    _ -> put $ Left "Error: An error occurred while processing your request"
   
 --p	A "put" call (a way to store a value for later use). Pop y, x and v, then change the character at the position (x,y) in the program to the character with ASCII value v
 putOp, getOp :: BefungeState -> Either String BefungeState
