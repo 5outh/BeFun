@@ -18,10 +18,18 @@ module Types(
   getFocus, getFocus',
   setFocus, setFocus',
   charToOp,
+  opToChar,
+  showZipper,
+  showZipper2D,
+  showInstructions,
+  zmap,
+  concatZMap,
+  toList
 )where
 
 import Data.Monoid
 import Data.Char
+import Data.List
 import System.Random
 
 data Direction = L | R | U | D deriving (Show, Eq)
@@ -95,12 +103,55 @@ charToOp  c | c `elem` ['0'..'9'] =   (Number (digitToInt c))
                 '~'  ->  AskChar
                 '@'  ->  End
                 ' '  ->  Empty
-                _   ->   (Other c)
+                _    ->  (Other c)
 
+opToChar :: Operation -> Char
+opToChar op = case op of
+                Number a       -> intToDigit a
+                Add            -> '+'
+                Subt           -> '-'
+                Mult           -> '*'
+                Div            -> '/'
+                Mod            -> '%'
+                Not            -> '!'
+                Types.GT       -> '`'
+                Dir R          -> '>'
+                Dir L          -> '<'
+                Dir U          -> '^'
+                Dir D          -> 'v'
+                RandDir        -> '?'
+                PopRL          -> '_'
+                PopUD          -> '|'
+                Str            -> '\"'
+                Duplicate      -> ':'
+                Swap           -> '\\'
+                PopDiscard     -> '$'
+                PopOutputInt   -> '.'
+                PopOutputAscii -> ','
+                Skip           -> '#'
+                Put            -> 'p'
+                Get            -> 'g'
+                AskNum         -> '&'
+                AskChar        -> '~'
+                End            -> '@'
+                Empty          -> ' '
+                (Other c)      -> c  
+                
+                
 -- Not even a valid monoid instance...
 instance Monoid Operation where
   mempty = Empty
   mappend a b = BefungeOps [a, b]
+
+zmap :: (a -> b) -> Zipper a -> Zipper b
+zmap f (as, b, cs) = (fmap f as, f b, fmap f cs)
+
+concatZMap f (as, b, cs) = (fmap f as) ++ [f b] ++ (fmap f cs)
+
+toList (as, b, cs) = (reverse as) ++ [b] ++ cs
+
+--showInstructions :: Torus Operation -> String
+showInstructions = fmap opToChar . concat . toList . zmap toList . t_data
   
 moveTo :: Torus a -> Point -> Torus a
 moveTo t@(Torus zipper w h) p@(x, y) = 
@@ -162,11 +213,15 @@ mkZipperBounded n (x:xs)
  | otherwise      = ([], x, xs ++ (replicate ( n - length xs - 1) mempty))
 
 mkZipper2DBounded :: (Monoid a) => Int -> Int -> [[a]] -> Zipper2D a
-mkZipper2DBounded w h xs = if length zippers >= h 
+mkZipper2DBounded w h xs = if (not $ null zippers)
                            then let (z:zs) = take h zippers in ([], z, zs)
                            else ([], head zippers, replicate (h - length zippers - 1) (mkEmptyZipper w) )
   where zippers = fmap (mkZipperBounded w) xs
 
+showZipper (a, b, c) = show $ a ++ [b] ++ c
+
+showZipper2D as = concatMap showZipper as
+ 
 mvPointTorus :: Int -> Int -> Direction -> Point -> Point
 mvPointTorus w _ L (x, y) = ((x-1) `mod` w, y)
 mvPointTorus w _ R (x, y) = ((x+1) `mod` w, y)

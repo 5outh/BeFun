@@ -142,8 +142,6 @@ putOp bs@(BefungeState is (y:x:v:xs) loc dir m r) = Right $ moveTo' swapped loc
 --g	A "get" call (a way to retrieve data in storage). Pop y and x, then push ASCII value of the character at that position in the program
 getOp bs@(BefungeState is (y:x:xs) loc dir m r) = Right $ moveTo' (BefungeState is (op:xs) (x, y) dir m r) loc
   where bs' = moveTo' bs (x, y)
-        op  = ord $ fromOp (getFocus' bs')
-        fromOp :: Operation -> Char
-        fromOp = undefined
+        op  = ord $ opToChar (getFocus' bs')
 
 endProgram _ = exitWith ExitSuccess
