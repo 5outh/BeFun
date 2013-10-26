@@ -52,7 +52,7 @@ data Operation =
   Number Int
   | Add | Subt | Mult | Div | Mod | Not | GT
   | Dir Direction | RandDir
-  | PopRight | PopLeft
+  | PopRL | PopUD
   | Str
   | Duplicate | Swap
   | PopDiscard | PopOutputInt | PopOutputAscii
@@ -80,8 +80,8 @@ charToOp  c | c `elem` ['0'..'9'] =   (Number (digitToInt c))
                 '^'  ->  Dir U
                 'v'  ->  Dir D
                 '?'  ->  RandDir
-                '_'  ->  PopRight
-                '|'  ->  PopLeft
+                '_'  ->  PopRL
+                '|'  ->  PopUD
                 '\"' ->  Str
                 ':'  ->  Duplicate
                 '\\' ->  Swap

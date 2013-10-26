@@ -1,6 +1,6 @@
 module FunctionProcesses(
   num,
-  add, subt, mult, divide, modulo, gt,
+  add, subt, mult, divide, modulo, gt, not',
   setDirection, setRandomDirection,
   moveB, 
   popRL, popUD, pop, popInt, popAscii,
@@ -22,7 +22,6 @@ import Control.Monad.Trans
 import Control.Monad.Trans.State
 import Control.Monad.Random
 
-num a (BefungeState is xs loc dir m r)= Right $ BefungeState is (a:xs) loc dir m r
 
 bsPopFunBinary f (BefungeState is (x:y:xs) loc dir m r) = Right $ BefungeState is ((f x y):xs) loc dir m r
 bsPopFunBinary f (BefungeState is xs loc dir m r) | length xs < 2 = Left "Error: Attempt to perform binary operation without enough numbers in stack"
@@ -39,11 +38,14 @@ modulo  = bsPopFunBinary (\a b -> if a == 0 then 0 else b `mod` a)
 gt      = bsPopFunBinary (\a b -> if b > a then 1 else 0) 
 not'    = bsPopFunUnary (\x -> if x == 0 then 1 else 0)
 
+num :: Int -> BefungeState -> Either String BefungeState
+num a (BefungeState is xs loc dir m r)= Right $ BefungeState is (a:xs) loc dir m r
+
 setDirection :: Direction -> BefungeState -> Either String BefungeState
 setDirection d (BefungeState is xs loc _ m r) = Right $ BefungeState is xs loc d m r
 
 -- @TODO: Random Direction Handling (Give back a new StdGen)
-setRandomDirection :: BefungeState -> Either () BefungeState
+setRandomDirection :: BefungeState -> Either String BefungeState
 setRandomDirection (BefungeState is xs loc _ m gen) = do
   let (val, gen') = runRand getRandomDirection gen
   return (BefungeState is xs loc val m gen')
@@ -135,9 +137,7 @@ popAscii = do
 putOp, getOp :: BefungeState -> Either String BefungeState
 putOp bs@(BefungeState is (y:x:v:xs) loc dir m r) = Right $ moveTo' swapped loc
   where bs' = moveTo' bs (x, y)
-        swapped = setFocus' bs' (toOp (chr v))
-        toOp :: Char -> Operation
-        toOp = undefined
+        swapped = setFocus' bs' (charToOp (chr v))
         
 --g	A "get" call (a way to retrieve data in storage). Pop y and x, then push ASCII value of the character at that position in the program
 getOp bs@(BefungeState is (y:x:xs) loc dir m r) = Right $ moveTo' (BefungeState is (op:xs) (x, y) dir m r) loc
