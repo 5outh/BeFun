@@ -31,13 +31,7 @@ instrs = do
   ops <- many1 line
   return ops
   
---parseBefunge :: String -> Either ParseError (Zipper2D Operation)
+parseBefungeInstructions :: String -> Torus Operation
 parseBefungeInstructions s = case (parse instrs "unknown" s) of
   Right ops -> Torus (mkZipper2DBounded 80 25 ops) 80 25
   Left  e   -> error $ show e
- 
-test = do
-  b <- readFile "../befunge_test.bf"
-  let x = parseBefungeInstructions b 
-  putStrLn (showInstructions x)
-  return ()
