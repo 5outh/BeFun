@@ -20,7 +20,6 @@ execute :: StateT (Either String BefungeState) IO ()
 execute = do
   bs <- get
   let bs' = fromEither bs
-  --lift (putStr $ show (getFocus' bs'))
   case (getFocus' bs') of
     Number n -> modifyE (num n)
     Add ->  modifyE add
@@ -44,15 +43,11 @@ execute = do
     Get -> modifyE getOp
     AskNum -> askInt
     AskChar -> askAscii
-    End -> return () -- perhaps this could be done better
+    End -> return ()
     Empty -> modify id
     Other c -> modifyE readChar
   if getFocus' bs' == End then return ()
   else do
-    moveState
-    execute -- I think this will work...
-
-moveState :: StateT (Either String BefungeState) IO ()
-moveState = do
-  bs <- get
-  modify . (. fromEither) $ moveB
+    -- modify without `fix`
+    modify . (. fromEither) $ moveB
+    execute
