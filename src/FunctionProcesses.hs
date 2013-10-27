@@ -20,10 +20,10 @@ import Data.Monoid
 
 import Data.Char(chr, ord, isDigit, digitToInt)
 import System.Exit(exitWith, ExitCode(..))
+import System.Random
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.State
-import Control.Monad.Random
 
 
 fix f bs@(BefungeState _ _ _ _ m _) | m == Normal = f bs
@@ -58,13 +58,9 @@ setDirection d (BefungeState is xs loc _ m r) = Right $ BefungeState is xs loc d
 -- @TODO: Random Direction Handling (Give back a new StdGen)
 setRandomDirection :: BefungeState -> Either String BefungeState
 setRandomDirection (BefungeState is xs loc _ m gen) = do
-  let (val, gen') = runRand getRandomDirection gen
-  return (BefungeState is xs loc val m gen')
-
-getRandomDirection :: RandomGen g => Rand g Direction
-getRandomDirection = do
-  a <- getRandomR (0,3)
-  return ([L,R,U,D] !! a)
+  let (val, gen') = randomR (0, 3) gen
+      dir = [L,R,U,D] !! val
+  return (BefungeState is xs loc dir m gen')
 
 -- @TODO : Fix Hardcoded Boundaries
 moveB, popRL, popUD, pop :: BefungeState -> Either String BefungeState

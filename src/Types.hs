@@ -189,7 +189,6 @@ mvLeft  ((x:xs), y, ys) = (xs, x, (y:ys))
 mvLeft  ([], x, ys)     = mvLeft (reverse ys, x, [])
 
 mv2D :: Direction -> Zipper2D a -> Zipper2D a
-
 {- Up and Down movements correspond to moving global zipper left or right -}
 mv2D D   t          = mvRight t
 mv2D U   t          = mvLeft  t
