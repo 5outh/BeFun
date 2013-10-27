@@ -26,6 +26,7 @@ import Control.Monad.Trans.State
 import Control.Monad.Random
 
 
+-- To handle mode!
 fix f bs@(BefungeState _ _ _ _ m _) | m == Normal = f bs
                                     | otherwise = readChar bs
 

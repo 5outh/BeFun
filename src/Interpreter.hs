@@ -14,11 +14,13 @@ fromEither :: Either String b -> b
 fromEither (Right x) = x
 fromEither (Left a) = error a
 
+modifyE = modify . (. fromEither) . fix
+
 execute :: StateT (Either String BefungeState) IO ()
 execute = do
   bs <- get
   let bs' = fromEither bs
-      modifyE = modify . (. fromEither) . fix
+  --lift (putStr $ show (getFocus' bs'))
   case (getFocus' bs') of
     Number n -> modifyE (num n)
     Add ->  modifyE add
@@ -47,6 +49,10 @@ execute = do
     Other c -> modifyE readChar
   if getFocus' bs' == End then return ()
   else do
-    modifyE moveB
+    moveState
     execute -- I think this will work...
-    
+
+moveState :: StateT (Either String BefungeState) IO ()
+moveState = do
+  bs <- get
+  modify . (. fromEither) $ moveB
