@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveFunctor #-}
-
 module Types(
   BefungeState(..),
   Operation(..),

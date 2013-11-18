@@ -9,6 +9,7 @@ import Control.Monad.State
 import System.Exit
 import System.Random
 import System.Environment
+import Visual
 
 {-
   Main Idea:
@@ -32,6 +33,8 @@ handleArgs ("-f":xs) = case (null xs) of
 
 handleArgs (_:xs) = return $ Left "Please use the flag `-f` and specify a file to run."
 handleArgs []     = return $ Left "Usage: BeFun -f \"source_file_name.bf\""
+
+handleArgs ("-v":xs) = undefined -- Visual debug
 
 main = do
   args <- getArgs
