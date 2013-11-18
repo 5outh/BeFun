@@ -22,7 +22,8 @@ module Types(
   showInstructions,
   zmap,
   concatZMap,
-  toList
+  toList,
+  sample
 )where
 
 import Data.Monoid
@@ -156,9 +157,14 @@ moveTo t@(Torus zipper w h) p@(x, y) =
   if (length tops == y) && (length lefts == x) then t
      --y coordinate is correct, just find x
      else if (length tops == y) then
-      moveTo (Torus (mv2D R zipper) w h) p
+      case length lefts < x of
+        True -> moveTo (Torus (mv2D R zipper) w h) p
+        _    -> moveTo (Torus (mv2D L zipper) w h) p
      --otherwise, get the y coordinate right
-     else moveTo (Torus (mv2D D zipper) w h) p
+     else 
+      case length tops < y of
+        True -> moveTo (Torus (mv2D D zipper) w h) p
+        _    -> moveTo (Torus (mv2D U zipper) w h) p
   where (tops, cur, bots)     = zipper
         (lefts, cur', rights) = cur
 
@@ -212,8 +218,8 @@ mkZipperBounded n (x:xs)
 
 mkZipper2DBounded :: (Monoid a) => Int -> Int -> [[a]] -> Zipper2D a
 mkZipper2DBounded w h xs = if (not $ null zippers)
-                           then let (z:zs) = take h zippers in ([], z, zs)
-                           else ([], head zippers, replicate (h - length zippers - 1) (mkEmptyZipper w) )
+                           then let (z:zs) = take h zippers in ([], z, zs ++ replicate (h - length zs - 1) (mkEmptyZipper w))
+                           else ([], head zippers, replicate h (mkEmptyZipper w) )
   where zippers = fmap (mkZipperBounded w) xs
 
 showZipper (a, b, c) = show $ a ++ [b] ++ c
@@ -225,3 +231,5 @@ mvPointTorus w _ L (x, y) = ((x-1) `mod` w, y)
 mvPointTorus w _ R (x, y) = ((x+1) `mod` w, y)
 mvPointTorus _ h U (x, y) = (x, (y+1) `mod` h)
 mvPointTorus _ h D (x, y) = (x, (y-1) `mod` h)
+
+sample = Torus (mkZipper2DBounded 10 10 [["a", "b"]]) 10 10

@@ -152,12 +152,12 @@ popAscii = do
 --p	A "put" call (a way to store a value for later use). Pop y, x and v, then change the character at the position (x,y) in the program to the character with ASCII value v
 putOp, getOp :: BefungeState -> Either String BefungeState
 putOp bs@(BefungeState is (y:x:v:xs) loc dir m r) = Right $ moveTo' swapped loc
-  where bs' = moveTo' bs (x, y)
+  where bs' = moveTo' (BefungeState is xs loc dir m r) (x, y)
         swapped = setFocus' bs' (charToOp (chr v))
         
 --g	A "get" call (a way to retrieve data in storage). Pop y and x, then push ASCII value of the character at that position in the program
-getOp bs@(BefungeState is (y:x:xs) loc dir m r) = Right $ moveTo' (BefungeState is (op:xs) (x, y) dir m r) loc
-  where bs' = moveTo' bs (x, y)
-        op  = ord $ opToChar (getFocus' bs')
+getOp bs@(BefungeState is (y:x:xs) loc dir m r) = Right $ BefungeState is (op:xs) loc dir m r
+  where moved = moveTo' bs (x, y)
+        op    = ord $ opToChar (getFocus' moved)
 
 endProgram _ = exitWith ExitSuccess

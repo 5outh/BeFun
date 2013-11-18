@@ -6,6 +6,7 @@ where
 
 import Types
 import FunctionProcesses
+import BefungeParser --not necessary
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.State
@@ -21,6 +22,8 @@ execute = do
   bs <- get
   let bs' = fromEither bs
   
+  --for debugging
+  --lift $ putStrLn $ showInstructions $ instructions bs'
   lift $ print $ stack bs'
   
   case (getFocus' bs') of
