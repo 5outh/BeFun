@@ -76,19 +76,23 @@ moveB (BefungeState is xs loc d m r) = Right $ BefungeState is' xs loc' d m r
 popRL bs@(BefungeState is (x:xs) loc dir m r) = case x of
         0 -> Right $ BefungeState is xs loc R m r
         _ -> Right $ BefungeState is xs loc L m r
-popRL (BefungeState    _  []      _  _   _ _) = Left "Error: Empty Stack; cannot perform '_'"
+--if empty stack, return 0
+popRL bs@(BefungeState is [] loc dir m r) = Right $ BefungeState is [] loc R m r
  
 popUD bs@(BefungeState is (x:xs) loc dir m r) = case x of
   0 -> Right $ BefungeState is xs loc D m r
   _ -> Right $ BefungeState is xs loc U m r
-popUD (BefungeState    _  []     _   _   _ _) = Left $ "Error: Empty Stack; cannot perform '|'"
+--if empty stack, return 0
+popUD (BefungeState is [] loc dir m r) = Right $ BefungeState is [] loc D m r
 
 pop (BefungeState is (x:xs) loc dir m r) = Right $ BefungeState is xs loc dir m r
-pop (BefungeState _ []      _   _   _ _) = Left $ "Error: Empty Stack; cannot pop"
+--don't fail on pop, just don't do anything.
+pop (BefungeState is []     loc dir m r) = Right $ BefungeState is [] loc dir m r
 
 dup, swap, strMode :: BefungeState -> Either String BefungeState
 dup (BefungeState is (x:xs) loc dir m r) = Right $ BefungeState is (x:x:xs) loc dir m r
-dup (BefungeState _  []     _   _   _ _) = Left "Error: Empty Stack; cannot duplicate"
+--don't fail on duplicate, just don't do anything.
+dup bs                                   = Right bs
 
 swap (BefungeState is (x:y:xs) loc dir m r) = Right $ BefungeState is (y:x:xs) loc dir m r
 swap (BefungeState _  xs        _  _   _ _) | length xs < 2 = Left "Error: Too few elements in stack; cannot swap"

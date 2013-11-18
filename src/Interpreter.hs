@@ -20,6 +20,9 @@ execute :: StateT (Either String BefungeState) IO ()
 execute = do
   bs <- get
   let bs' = fromEither bs
+  
+  lift $ print $ stack bs'
+  
   case (getFocus' bs') of
     Number n -> modifyE (num n)
     Add ->  modifyE add
