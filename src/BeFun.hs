@@ -31,6 +31,19 @@ handleArgs ("-f":xs) = case (null xs) of
       Normal
       gen
 
+handleArgs ("-i":xs) = case (null xs) of
+  False -> let (x:_) = xs in do
+    gen <- newStdGen
+    let is = parseBefungeInstructions x
+    return $ Right $
+      BefungeState
+      is
+      []
+      (0,0)
+      R
+      Normal
+      gen
+      
 handleArgs (_:xs) = return $ Left "Please use the flag `-f` and specify a file to run."
 handleArgs []     = return $ Left "Usage: BeFun -f \"source_file_name.bf\""
 

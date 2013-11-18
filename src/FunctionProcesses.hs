@@ -43,7 +43,7 @@ bsPopFunUnary f (BefungeState _ []      _   _   _ _) = Left "Error: Attempt to p
 
 add, subt, mult, divide, modulo, gt, not' :: BefungeState -> Either String BefungeState
 add     = bsPopFunBinary (+)
-subt    = bsPopFunBinary (-)
+subt    = bsPopFunBinary (flip (-))
 mult    = bsPopFunBinary (*)
 divide  = bsPopFunBinary (\a b -> if a == 0 then 0 else b `div` a)
 modulo  = bsPopFunBinary (\a b -> if a == 0 then 0 else b `mod` a)
