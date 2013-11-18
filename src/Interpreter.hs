@@ -24,7 +24,10 @@ execute = do
   
   --for debugging
   --lift $ putStrLn $ showInstructions $ instructions bs'
-  lift $ print $ stack bs'
+  lift $ print $ stack     bs'
+  lift $ print $ arrayLoc  bs'
+  lift $ print $ getFocus' bs'
+  lift $ mapM_ putStrLn $ showInstructions $ instructions bs'
   
   case (getFocus' bs') of
     Number n -> modifyE (num n)

@@ -70,7 +70,7 @@ getRandomDirection = do
 -- @TODO : Fix Hardcoded Boundaries
 moveB, popRL, popUD, pop :: BefungeState -> Either String BefungeState
 moveB (BefungeState is xs loc d m r) = Right $ BefungeState is' xs loc' d m r
-  where is' = mv is d
+  where is'  = mv is d
         loc' = mvPointTorus 40 25 d loc --hardcoded boundaries atm...gonna fix this!
 
 popRL bs@(BefungeState is (x:xs) loc dir m r) = case x of
@@ -151,10 +151,11 @@ popAscii = do
   
 --p	A "put" call (a way to store a value for later use). Pop y, x and v, then change the character at the position (x,y) in the program to the character with ASCII value v
 putOp, getOp :: BefungeState -> Either String BefungeState
-putOp bs@(BefungeState is (y:x:v:xs) loc dir m r) = Right $ moveTo' swapped loc
-  where bs' = moveTo' (BefungeState is xs loc dir m r) (x, y)
-        swapped = setFocus' bs' (charToOp (chr v))
-        
+putOp bs@(BefungeState is (y:x:v:xs) loc dir m r) = Right final
+  where moved   = moveTo' (BefungeState is xs loc dir m r) (x, y)
+        swapped = setFocus' moved (charToOp (chr v))
+        final   = moveTo'   swapped loc
+
 --g	A "get" call (a way to retrieve data in storage). Pop y and x, then push ASCII value of the character at that position in the program
 getOp bs@(BefungeState is (y:x:xs) loc dir m r) = Right $ BefungeState is (op:xs) loc dir m r
   where moved = moveTo' bs (x, y)

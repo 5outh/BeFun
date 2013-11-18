@@ -1,13 +1,11 @@
-44*4*4*1-80pv
-v           <
+44*4*4*1-08p009p099p v
+v                    <
  above : 255
-v         v            <
-v      <  >90g+80g%.:  |  --instead of , here, we want the function to add sums etc
->~:55+-|               @
+v         v         <
+v      <  >08g09p   | 
+>~:55+-|            @
        >  ^
 
-0        0
-15g+(255)%
-255  @ 8, 0
-sum1 @ 9, 0
-sum2 @ 9, 9
+255  @ 08
+sum1 @ 09
+sum2 @ 99

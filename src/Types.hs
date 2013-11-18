@@ -149,8 +149,8 @@ concatZMap f (as, b, cs) = (fmap f as) ++ [f b] ++ (fmap f cs)
 
 toList (as, b, cs) = (reverse as) ++ [b] ++ cs
 
---showInstructions :: Torus Operation -> String
-showInstructions = fmap opToChar . concat . toList . zmap toList . t_data
+--showInstructions :: Torus Operation -> [String]
+showInstructions = fmap (fmap opToChar) . toList . zmap toList . t_data
   
 moveTo :: Torus a -> Point -> Torus a
 moveTo t@(Torus zipper w h) p@(x, y) = 
@@ -158,13 +158,13 @@ moveTo t@(Torus zipper w h) p@(x, y) =
      --y coordinate is correct, just find x
      else if (length tops == y) then
       case length lefts < x of
-        True -> moveTo (Torus (mv2D R zipper) w h) p
-        _    -> moveTo (Torus (mv2D L zipper) w h) p
+        True -> moveTo (Torus (mv2D R zipper) w h) ((x `mod` w), (y `mod` h))
+        _    -> moveTo (Torus (mv2D L zipper) w h) ((x `mod` w), (y `mod` h))
      --otherwise, get the y coordinate right
      else 
       case length tops < y of
-        True -> moveTo (Torus (mv2D D zipper) w h) p
-        _    -> moveTo (Torus (mv2D U zipper) w h) p
+        True -> moveTo (Torus (mv2D D zipper) w h) ((x `mod` w), (y `mod` h))
+        _    -> moveTo (Torus (mv2D U zipper) w h) ((x `mod` w), (y `mod` h))
   where (tops, cur, bots)     = zipper
         (lefts, cur', rights) = cur
 

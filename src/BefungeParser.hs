@@ -1,5 +1,6 @@
 module BefungeParser(
-  parseBefungeInstructions
+  parseBefungeInstructions,
+  mkBFState
 )
 
 where
@@ -35,4 +36,15 @@ parseBefungeInstructions :: String -> Torus Operation
 parseBefungeInstructions s = case (parse instrs "unknown" s) of
   Right ops -> Torus (mkZipper2DBounded 80 25 ops) 80 25
   Left  e   -> error $ show e
-  
+
+mkBFState b = do
+    gen <- newStdGen
+    let is = parseBefungeInstructions b
+    return $ Right $
+      BefungeState
+      is
+      []
+      (0,0)
+      R
+      Normal
+      gen
