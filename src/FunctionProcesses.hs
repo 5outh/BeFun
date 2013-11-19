@@ -26,6 +26,7 @@ import Control.Monad.Trans
 import Control.Monad.Trans.State
 
 
+-- To handle mode!
 fix f bs@(BefungeState _ _ _ _ m _) | m == Normal = f bs
                                     | otherwise = readChar bs
 
@@ -42,7 +43,7 @@ bsPopFunUnary f (BefungeState _ []      _   _   _ _) = Left "Error: Attempt to p
 
 add, subt, mult, divide, modulo, gt, not' :: BefungeState -> Either String BefungeState
 add     = bsPopFunBinary (+)
-subt    = bsPopFunBinary (-)
+subt    = bsPopFunBinary (flip (-))
 mult    = bsPopFunBinary (*)
 divide  = bsPopFunBinary (\a b -> if a == 0 then 0 else b `div` a)
 modulo  = bsPopFunBinary (\a b -> if a == 0 then 0 else b `mod` a)
@@ -65,25 +66,29 @@ setRandomDirection (BefungeState is xs loc _ m gen) = do
 -- @TODO : Fix Hardcoded Boundaries
 moveB, popRL, popUD, pop :: BefungeState -> Either String BefungeState
 moveB (BefungeState is xs loc d m r) = Right $ BefungeState is' xs loc' d m r
-  where is' = mv is d
+  where is'  = mv is d
         loc' = mvPointTorus 40 25 d loc --hardcoded boundaries atm...gonna fix this!
 
 popRL bs@(BefungeState is (x:xs) loc dir m r) = case x of
         0 -> Right $ BefungeState is xs loc R m r
         _ -> Right $ BefungeState is xs loc L m r
-popRL (BefungeState    _  []      _  _   _ _) = Left "Error: Empty Stack; cannot perform '_'"
+--if empty stack, return 0
+popRL bs@(BefungeState is [] loc dir m r) = Right $ BefungeState is [] loc R m r
  
 popUD bs@(BefungeState is (x:xs) loc dir m r) = case x of
   0 -> Right $ BefungeState is xs loc D m r
   _ -> Right $ BefungeState is xs loc U m r
-popUD (BefungeState    _  []     _   _   _ _) = Left $ "Error: Empty Stack; cannot perform '|'"
+--if empty stack, return 0
+popUD (BefungeState is [] loc dir m r) = Right $ BefungeState is [] loc D m r
 
 pop (BefungeState is (x:xs) loc dir m r) = Right $ BefungeState is xs loc dir m r
-pop (BefungeState _ []      _   _   _ _) = Left $ "Error: Empty Stack; cannot pop"
+--don't fail on pop, just don't do anything.
+pop (BefungeState is []     loc dir m r) = Right $ BefungeState is [] loc dir m r
 
 dup, swap, strMode :: BefungeState -> Either String BefungeState
 dup (BefungeState is (x:xs) loc dir m r) = Right $ BefungeState is (x:x:xs) loc dir m r
-dup (BefungeState _  []     _   _   _ _) = Left "Error: Empty Stack; cannot duplicate"
+--don't fail on duplicate, just don't do anything.
+dup bs                                   = Right bs
 
 swap (BefungeState is (x:y:xs) loc dir m r) = Right $ BefungeState is (y:x:xs) loc dir m r
 swap (BefungeState _  xs        _  _   _ _) | length xs < 2 = Left "Error: Too few elements in stack; cannot swap"
@@ -142,13 +147,14 @@ popAscii = do
   
 --p	A "put" call (a way to store a value for later use). Pop y, x and v, then change the character at the position (x,y) in the program to the character with ASCII value v
 putOp, getOp :: BefungeState -> Either String BefungeState
-putOp bs@(BefungeState is (y:x:v:xs) loc dir m r) = Right $ moveTo' swapped loc
-  where bs' = moveTo' bs (x, y)
-        swapped = setFocus' bs' (charToOp (chr v))
-        
+putOp bs@(BefungeState is (y:x:v:xs) loc dir m r) = Right final
+  where moved   = moveTo' (BefungeState is xs loc dir m r) (x, y)
+        swapped = setFocus' moved (charToOp (chr v))
+        final   = moveTo'   swapped loc
+
 --g	A "get" call (a way to retrieve data in storage). Pop y and x, then push ASCII value of the character at that position in the program
-getOp bs@(BefungeState is (y:x:xs) loc dir m r) = Right $ moveTo' (BefungeState is (op:xs) (x, y) dir m r) loc
-  where bs' = moveTo' bs (x, y)
-        op  = ord $ opToChar (getFocus' bs')
+getOp bs@(BefungeState is (y:x:xs) loc dir m r) = Right $ BefungeState is (op:xs) loc dir m r
+  where moved = moveTo' bs (x, y)
+        op    = ord $ opToChar (getFocus' moved)
 
 endProgram _ = exitWith ExitSuccess
