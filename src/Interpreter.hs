@@ -21,17 +21,6 @@ execute :: StateT (Either String BefungeState) IO ()
 execute = do
   bs <- get
   let bs' = fromEither bs
-<<<<<<< HEAD
-=======
-  
-  --for debugging
-  --lift $ putStrLn $ showInstructions $ instructions bs'
-  lift $ print $ stack     bs'
-  lift $ print $ arrayLoc  bs'
-  lift $ print $ getFocus' bs'
-  lift $ mapM_ putStrLn $ showInstructions $ instructions bs'
-  
->>>>>>> 0657def1f044a6161710a0b29d49b996490807b2
   case (getFocus' bs') of
     Number n -> modifyE (num n)
     Add ->  modifyE add
@@ -60,17 +49,6 @@ execute = do
     Other c -> modifyE readChar
   if getFocus' bs' == End then return ()
   else do
-<<<<<<< HEAD
-    moveState
-    execute
-
-moveState :: StateT (Either String BefungeState) IO ()
-moveState = do
-  bs <- get
-  modifyE moveB
-    
-=======
     -- modify without `fix`
     modify . (. fromEither) $ moveB
     execute
->>>>>>> 0657def1f044a6161710a0b29d49b996490807b2

@@ -9,7 +9,6 @@ import Control.Monad.State
 import System.Exit
 import System.Random
 import System.Environment
-import Visual
 
 {-
   Main Idea:
